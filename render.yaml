@@ -1,0 +1,22 @@
+databases:
+  - name: whisperlink-db
+    plan: free
+    databaseName: whisperlink
+    user: whisperlink
+
+services:
+  - type: web
+    plan: free
+    name: whisperlink
+    runtime: python
+    buildCommand: './build.sh'
+    startCommand: 'python -m gunicorn whisperlink_backend.wsgi:application'
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: whisperlink-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: 4

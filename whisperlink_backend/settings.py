@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import dj_database_url
 
 # Load environment variables
 load_dotenv()
@@ -28,15 +29,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-beq$2$wcokr(l8cz&$%lorn*t6oo9wyhtkt@8x5a=-i0_a!&vj')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+DEBUG = 'RENDER' not in os.environ
 
-ALLOWED_HOSTS = ['*'] if DEBUG else [
-    'localhost',
-    '127.0.0.1',
-    '.railway.app',
-    os.getenv('RAILWAY_STATIC_URL', ''),
-    os.getenv('ALLOWED_HOST', ''),
-]
+ALLOWED_HOSTS = []
+
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
+if DEBUG:
+    ALLOWED_HOSTS.extend(['localhost', '127.0.0.1'])
 
 
 # Application definition
@@ -89,18 +91,11 @@ WSGI_APPLICATION = 'whisperlink_backend.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('PGDATABASE', os.getenv('DB_NAME', 'postgres')),
-        'USER': os.getenv('PGUSER', os.getenv('DB_USER', 'postgres.rpptvbcjrytijmfqvndj')),
-        'PASSWORD': os.getenv('PGPASSWORD', os.getenv('DB_PASSWORD', 'Stevoh@Stevoh2020.')),
-        'HOST': os.getenv('PGHOST', os.getenv('DB_HOST', 'aws-0-eu-north-1.pooler.supabase.com')),
-        'PORT': os.getenv('PGPORT', os.getenv('DB_PORT', '6543')),
-        'OPTIONS': {
-            'sslmode': 'require',
-            'connect_timeout': 10,
-        },
-    }
+    'default': dj_database_url.config(
+        default='postgresql://postgres.rpptvbcjrytijmfqvndj:Stevoh@Stevoh2020.@aws-0-eu-north-1.pooler.supabase.com:6543/postgres',
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 }
 
 
